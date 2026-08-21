@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}{{ source.name }} · scripscrap{% endblock %}
+{% block content %}
+  <p class="crumb"><a href="{{ url_for('index') }}">Sources</a> / {{ source.name }}</p>
+
+  <section class="panel">
+    <div class="toolbar">
+      <div>
+        <h1>{{ source.name }}</h1>
+        <p class="muted url"><a href="{{ source.url }}">{{ source.url }}</a></p>
+      </div>
+      <div class="actions">
+        <form method="post" action="{{ url_for('refresh_source', source_id=source.id) }}">
+          <button type="submit">Refresh data</button>
+        </form>
+        {% if snapshot %}
+          <a class="button secondary" href="{{ url_for('export_csv', source_id=source.id) }}">CSV</a>
+          <a class="button secondary" href="{{ url_for('export_json', source_id=source.id) }}">JSON</a>
+        {% endif %}
+        <form method="post" action="{{ url_for('delete_source', source_id=source.id) }}" onsubmit="return confirm('Delete this source and its stored data?');">
+          <button type="submit" class="danger">Delete</button>
+        </form>
+      </div>
+    </div>
+    <p class="meta">
+      Last run: {{ source.last_run_at or "never" }}
+      · {{ source.row_count }} row{{ "" if source.row_count == 1 else "s" }}
+      {% if source.table_index is not none %}
+        · table {{ source.table_index }}
+      {% endif %}
+    </p>
+    {% if source.last_error %}
+      <p class="flash flash-error">Last scrape failed: {{ source.last_error }}</p>
+    {% endif %}
+  </section>
+
+  {% if snapshot %}
+    {% for table in snapshot.tables %}
+      <section class="panel">
+        <h2>Table {{ table.index }}</h2>
+        <div class="table-wrap">
+          <table class="data">
+            <thead>
+              <tr>
+                {% for header in table.headers %}
+                  <th>{{ header }}</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in table.rows %}
+                <tr>
+                  {% for cell in row %}
+                    <td>{{ cell }}</td>
+                  {% endfor %}
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    {% endfor %}
+  {% else %}
+    <section class="panel">
+      <p class="muted">No stored data yet. Click Refresh data to scrape this URL.</p>
+    </section>
+  {% endif %}
+
+  <section class="panel">
+    <h2>Settings</h2>
+    <form class="stack" method="post" action="{{ url_for('update_source', source_id=source.id) }}">
+      <label>
+        Name
+        <input type="text" name="name" value="{{ source.name }}">
+      </label>
+      <label>
+        URL
+        <input type="url" name="url" required value="{{ source.url }}">
+      </label>
+      <div class="row">
+        <label>
+          Table index
+          <input type="number" name="table_index" min="0" step="1" value="{{ source.table_index if source.table_index is not none else '' }}" placeholder="All tables">
+        </label>
+        <label>
+          Timeout (seconds)
+          <input type="number" name="timeout" min="1" step="1" value="{{ source.timeout|int }}">
+        </label>
+      </div>
+      <button type="submit" class="secondary">Save settings</button>
+    </form>
+  </section>
+{% endblock %}

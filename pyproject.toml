@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scripscrap"
+version = "0.1.0"
+description = "Extract HTML tables from public pages, from the CLI or a local web UI."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "flask>=3.0.0",
+    "playwright>=1.40.0",
+]
+
+[project.scripts]
+scripscrap = "scripscrap.__main__:main"
+scripscrap-web = "scripscrap.web:main"
+
+[tool.setuptools.packages.find]
+include = ["scripscrap"]
+
+[tool.setuptools.package-data]
+scripscrap = ["templates/*.html", "static/*"]

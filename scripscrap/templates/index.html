@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}scripscrap{% endblock %}
+{% block content %}
+  <section class="panel">
+    <h1>Add a source</h1>
+    <p class="lede">Save a public page, scrape its HTML tables, and refresh the stored copy when you need an update.</p>
+    <form class="stack" method="post" action="{{ url_for('create_source') }}">
+      <label>
+        Name
+        <input type="text" name="name" placeholder="Optional — defaults to the hostname">
+      </label>
+      <label>
+        URL
+        <input type="url" name="url" required placeholder="https://example.com/page-with-tables">
+      </label>
+      <div class="row">
+        <label>
+          Table index
+          <input type="number" name="table_index" min="0" step="1" placeholder="All tables">
+        </label>
+        <label>
+          Timeout (seconds)
+          <input type="number" name="timeout" min="1" step="1" value="30">
+        </label>
+      </div>
+      <button type="submit">Add and scrape</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h1>Post matchup</h1>
+    <p class="lede">Sends JSON to the add-matchup endpoint. Normalization from scraped tables comes later.</p>
+    <form class="stack" method="post" action="{{ url_for('send_matchup') }}">
+      <label>
+        JSON payload
+        <textarea name="payload" rows="22" spellcheck="false">{{ example_payload }}</textarea>
+      </label>
+      <button type="submit">POST matchup</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h1>Sources</h1>
+    {% if sources %}
+      <table class="data sources">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Rows</th>
+            <th>Last run</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for source in sources %}
+            <tr>
+              <td>
+                <a href="{{ url_for('show_source', source_id=source.id) }}">{{ source.name }}</a>
+                <div class="muted url">{{ source.url }}</div>
+              </td>
+              <td>{{ source.row_count }}</td>
+              <td>{{ source.last_run_at or "—" }}</td>
+              <td>
+                {% if source.last_error %}
+                  <span class="status bad">error</span>
+                {% elif source.last_run_at %}
+                  <span class="status ok">ok</span>
+                {% else %}
+                  <span class="status">new</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="muted">No sources yet. Add a public URL above.</p>
+    {% endif %}
+  </section>
+{% endblock %}

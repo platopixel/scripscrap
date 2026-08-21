@@ -1,0 +1,22 @@
+{
+    "week": 15,
+    "id": "qb",
+    "lockedAtUtc": "2026-12-14T18:00:00Z",
+    "freezeAtUtc": "2026-12-17T17:00:00Z",
+    "playerA": {
+      "slug": "patrick-mahomes",
+      "name": "Patrick Mahomes",
+      "teamAbbr": "KC",
+      "opponent": "@ LAC",
+      "pos": "QB",
+      "proj": 24.1
+    },
+    "playerB": {
+      "slug": "justin-herbert",
+      "name": "Justin Herbert",
+      "teamAbbr": "LAC",
+      "opponent": "vs KC",
+      "pos": "QB",
+      "proj": 22.8
+    }
+  }
