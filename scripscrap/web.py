@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 from io import StringIO
 from pathlib import Path
 from urllib.parse import urlparse
@@ -18,7 +17,14 @@ from flask import (
     url_for,
 )
 
-from scripscrap.matchup import EXAMPLE_MATCHUP, MatchupError, post_matchup
+from scripscrap.matchup import (
+    EXAMPLE_MATCHUP,
+    MatchupError,
+    MatchupValidationError,
+    matchup_from_form,
+    parse_matchup_payload,
+    post_matchup,
+)
 from scripscrap.output import write_csv, write_json
 from scripscrap.scraper import ScrapeError, Table, scrape_tables, select_tables
 from scripscrap.store import Store
@@ -41,7 +47,7 @@ def create_app(store: Store | None = None) -> Flask:
         return render_template(
             "index.html",
             sources=sources,
-            example_payload=json.dumps(EXAMPLE_MATCHUP, indent=2),
+            example=EXAMPLE_MATCHUP,
         )
 
     @app.post("/sources")
@@ -179,21 +185,14 @@ def _form_source(form) -> dict | None:
 
 def _matchup_payload_from_request() -> dict | None:
     if request.is_json:
-        payload = request.get_json(silent=True)
+        raw = request.get_json(silent=True)
     else:
-        raw = (request.form.get("payload") or "").strip()
-        if not raw:
-            flash("Paste a matchup JSON payload first.", "error")
-            return None
-        try:
-            payload = json.loads(raw)
-        except json.JSONDecodeError as exc:
-            flash(f"Invalid matchup JSON: {exc}", "error")
-            return None
-    if not isinstance(payload, dict):
-        flash("Matchup payload must be a JSON object.", "error")
+        raw = matchup_from_form(request.form)
+    try:
+        return parse_matchup_payload(raw)
+    except MatchupValidationError as exc:
+        flash(str(exc), "error")
         return None
-    return payload
 
 
 def _is_http_url(url: str) -> bool:

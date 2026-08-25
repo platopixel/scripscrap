@@ -69,6 +69,43 @@ h2 { font-size: 1.05rem; }
 .stack { display: grid; gap: 0.85rem; }
 .row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; }
 
+.players {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+fieldset.player {
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.75rem 1rem 1rem;
+  display: grid;
+  gap: 0.85rem;
+}
+
+fieldset.player legend {
+  padding: 0 0.35rem;
+  font-weight: 600;
+}
+
+details.preview summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.payload-preview {
+  margin: 0.5rem 0 0;
+  padding: 0.75rem 0.9rem;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 0.8rem;
+  overflow: auto;
+  white-space: pre;
+}
+
 label {
   display: grid;
   gap: 0.3rem;
@@ -172,5 +209,6 @@ table.data th { font-size: 0.8rem; color: var(--muted); }
 table.sources td a { color: var(--ink); font-weight: 600; }
 
 @media (max-width: 640px) {
-  .row { grid-template-columns: 1fr; }
+  .row,
+  .players { grid-template-columns: 1fr; }
 }

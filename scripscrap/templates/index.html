@@ -29,14 +29,112 @@
 
   <section class="panel">
     <h1>Post matchup</h1>
-    <p class="lede">Sends JSON to the add-matchup endpoint. Normalization from scraped tables comes later.</p>
-    <form class="stack" method="post" action="{{ url_for('send_matchup') }}">
-      <label>
-        JSON payload
-        <textarea name="payload" rows="22" spellcheck="false">{{ example_payload }}</textarea>
-      </label>
+    <p class="lede">Fill in the fields (same shape as the API payload), then POST to the add-matchup endpoint.</p>
+    <form id="matchup-form" class="stack" method="post" action="{{ url_for('send_matchup') }}" autocomplete="off">
+      <div class="row">
+        <label>
+          Week
+          <input type="number" name="week" required min="1" step="1" value="{{ example.week }}">
+        </label>
+        <label>
+          Matchup id
+          <input type="text" name="id" required maxlength="32" value="{{ example.id }}" placeholder="qb">
+        </label>
+      </div>
+      <div class="row">
+        <label>
+          Locked at (UTC)
+          <input type="datetime-local" name="lockedAtUtc" required step="1" value="{{ example.lockedAtUtc.rstrip('Z') }}">
+        </label>
+        <label>
+          Freeze at (UTC)
+          <input type="datetime-local" name="freezeAtUtc" required step="1" value="{{ example.freezeAtUtc.rstrip('Z') }}">
+        </label>
+      </div>
+      <div class="players">
+        {% for prefix, player, label in [
+          ("playerA", example.playerA, "Player A"),
+          ("playerB", example.playerB, "Player B"),
+        ] %}
+          <fieldset class="player">
+            <legend>{{ label }}</legend>
+            <label>
+              Slug
+              <input type="text" name="{{ prefix }}_slug" required value="{{ player.slug }}" placeholder="patrick-mahomes">
+            </label>
+            <label>
+              Name
+              <input type="text" name="{{ prefix }}_name" required value="{{ player.name }}">
+            </label>
+            <div class="row">
+              <label>
+                Team
+                <input type="text" name="{{ prefix }}_teamAbbr" required maxlength="8" value="{{ player.teamAbbr }}" placeholder="KC">
+              </label>
+              <label>
+                Position
+                <input type="text" name="{{ prefix }}_pos" required maxlength="8" value="{{ player.pos }}" placeholder="QB">
+              </label>
+            </div>
+            <label>
+              Opponent
+              <input type="text" name="{{ prefix }}_opponent" required value="{{ player.opponent }}" placeholder="@ LAC">
+            </label>
+            <label>
+              Projection
+              <input type="number" name="{{ prefix }}_proj" required step="any" value="{{ player.proj }}">
+            </label>
+          </fieldset>
+        {% endfor %}
+      </div>
       <button type="submit">POST matchup</button>
+      <details class="preview" open>
+        <summary>JSON payload</summary>
+        <pre id="payload-preview" class="payload-preview">{{ example | tojson(indent=2) }}</pre>
+      </details>
     </form>
+    <script>
+      (function () {
+        const form = document.getElementById("matchup-form");
+        const preview = document.getElementById("payload-preview");
+        if (!form || !preview) return;
+
+        const value = (name) => (form.elements[name]?.value || "").trim();
+
+        const toUtc = (name) => {
+          let stamp = value(name);
+          if (!stamp) return "";
+          if (stamp.endsWith("Z")) return stamp;
+          if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(stamp)) stamp += ":00";
+          return stamp + "Z";
+        };
+
+        const player = (prefix) => ({
+          slug: value(prefix + "_slug"),
+          name: value(prefix + "_name"),
+          teamAbbr: value(prefix + "_teamAbbr"),
+          opponent: value(prefix + "_opponent"),
+          pos: value(prefix + "_pos"),
+          proj: value(prefix + "_proj") === "" ? "" : Number(value(prefix + "_proj")),
+        });
+
+        const render = () => {
+          const weekRaw = value("week");
+          const payload = {
+            week: weekRaw === "" ? "" : Number(weekRaw),
+            id: value("id"),
+            lockedAtUtc: toUtc("lockedAtUtc"),
+            freezeAtUtc: toUtc("freezeAtUtc"),
+            playerA: player("playerA"),
+            playerB: player("playerB"),
+          };
+          preview.textContent = JSON.stringify(payload, null, 2);
+        };
+
+        form.addEventListener("input", render);
+        render();
+      })();
+    </script>
   </section>
 
   <section class="panel">
