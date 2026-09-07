@@ -14,6 +14,7 @@ from flask import (
     redirect,
     render_template,
     request,
+    session,
     url_for,
 )
 
@@ -21,6 +22,7 @@ from scripscrap.matchup import (
     EXAMPLE_MATCHUP,
     MatchupError,
     MatchupValidationError,
+    matchup_form_values,
     matchup_from_form,
     parse_matchup_payload,
     post_matchup,
@@ -28,6 +30,8 @@ from scripscrap.matchup import (
 from scripscrap.output import write_csv, write_json
 from scripscrap.scraper import ScrapeError, Table, scrape_tables, select_tables
 from scripscrap.store import Store
+
+MATCHUP_FORM_SESSION_KEY = "matchup_form"
 
 HERE = Path(__file__).resolve().parent
 
@@ -44,10 +48,14 @@ def create_app(store: Store | None = None) -> Flask:
     @app.get("/")
     def index():
         sources = app.config["STORE"].list_sources()
+        saved = session.get(MATCHUP_FORM_SESSION_KEY)
+        matchup = matchup_form_values(
+            saved if saved is not None else EXAMPLE_MATCHUP
+        )
         return render_template(
             "index.html",
             sources=sources,
-            example=EXAMPLE_MATCHUP,
+            matchup=matchup,
         )
 
     @app.post("/sources")
@@ -131,8 +139,13 @@ def create_app(store: Store | None = None) -> Flask:
 
     @app.post("/matchups")
     def send_matchup():
-        payload = _matchup_payload_from_request()
-        if payload is None:
+        raw = _raw_matchup_from_request()
+        if isinstance(raw, dict):
+            session[MATCHUP_FORM_SESSION_KEY] = raw
+        try:
+            payload = parse_matchup_payload(raw)
+        except MatchupValidationError as exc:
+            flash(str(exc), "error")
             return redirect(request.referrer or url_for("index"))
         try:
             result = post_matchup(payload)
@@ -183,16 +196,10 @@ def _form_source(form) -> dict | None:
     }
 
 
-def _matchup_payload_from_request() -> dict | None:
+def _raw_matchup_from_request() -> dict | None:
     if request.is_json:
-        raw = request.get_json(silent=True)
-    else:
-        raw = matchup_from_form(request.form)
-    try:
-        return parse_matchup_payload(raw)
-    except MatchupValidationError as exc:
-        flash(str(exc), "error")
-        return None
+        return request.get_json(silent=True)
+    return matchup_from_form(request.form)
 
 
 def _is_http_url(url: str) -> bool:

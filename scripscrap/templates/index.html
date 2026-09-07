@@ -34,27 +34,27 @@
       <div class="row">
         <label>
           Week
-          <input type="number" name="week" required min="1" step="1" value="{{ example.week }}">
+          <input type="number" name="week" required min="1" step="1" value="{{ matchup.week }}">
         </label>
         <label>
           Matchup id
-          <input type="text" name="id" required maxlength="32" value="{{ example.id }}" placeholder="qb">
+          <input type="text" name="id" required maxlength="32" value="{{ matchup.id }}" placeholder="qb">
         </label>
       </div>
       <div class="row">
         <label>
           Locked at (UTC)
-          <input type="datetime-local" name="lockedAtUtc" required step="1" value="{{ example.lockedAtUtc.rstrip('Z') }}">
+          <input type="datetime-local" name="lockedAtUtc" required step="1" value="{{ matchup.lockedAtUtc }}">
         </label>
         <label>
           Freeze at (UTC)
-          <input type="datetime-local" name="freezeAtUtc" required step="1" value="{{ example.freezeAtUtc.rstrip('Z') }}">
+          <input type="datetime-local" name="freezeAtUtc" required step="1" value="{{ matchup.freezeAtUtc }}">
         </label>
       </div>
       <div class="players">
         {% for prefix, player, label in [
-          ("playerA", example.playerA, "Player A"),
-          ("playerB", example.playerB, "Player B"),
+          ("playerA", matchup.playerA, "Player A"),
+          ("playerB", matchup.playerB, "Player B"),
         ] %}
           <fieldset class="player">
             <legend>{{ label }}</legend>
@@ -90,7 +90,7 @@
       <button type="submit">POST matchup</button>
       <details class="preview" open>
         <summary>JSON payload</summary>
-        <pre id="payload-preview" class="payload-preview">{{ example | tojson(indent=2) }}</pre>
+        <pre id="payload-preview" class="payload-preview">{{ matchup | tojson(indent=2) }}</pre>
       </details>
     </form>
     <script>

@@ -80,6 +80,38 @@ def matchup_from_form(form: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
+def matchup_form_values(raw: Any | None = None) -> dict[str, Any]:
+    """Normalize a matchup dict for HTML form fields.
+
+    Date-time values are returned without a trailing Z so they work in
+    ``datetime-local`` inputs. Missing nested player keys become empty
+    strings so the template can always read the expected shape.
+    """
+    data = raw if isinstance(raw, dict) else {}
+
+    def player(src: Any) -> dict[str, Any]:
+        src = src if isinstance(src, dict) else {}
+        return {
+            key: "" if src.get(key) is None else src[key] for key in _PLAYER_KEYS
+        }
+
+    return {
+        "week": data["week"] if data.get("week") is not None else "",
+        "id": data["id"] if data.get("id") is not None else "",
+        "lockedAtUtc": _form_datetime(data.get("lockedAtUtc")),
+        "freezeAtUtc": _form_datetime(data.get("freezeAtUtc")),
+        "playerA": player(data.get("playerA")),
+        "playerB": player(data.get("playerB")),
+    }
+
+
+def _form_datetime(value: Any) -> str:
+    text = "" if value is None else str(value).strip()
+    if text.endswith("Z"):
+        text = text[:-1]
+    return text
+
+
 def parse_matchup_payload(raw: Any) -> MatchupPayload:
     """Validate *raw* and return a payload matching the example JSON shape."""
     if not isinstance(raw, dict):
