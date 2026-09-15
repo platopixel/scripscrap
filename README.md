@@ -22,39 +22,58 @@ playwright install chromium
 
 On Windows, activate the venv with `.venv\Scripts\activate` instead of `source .venv/bin/activate`.
 
-That install provides two commands: `scripscrap` (CLI) and `scripscrap-web` (local UI). You can also run the same entry points as `python -m scripscrap` and `python -m scripscrap.web`.
+Keep the venv activated in any later terminal session (`source .venv/bin/activate`). The install puts `scripscrap` and `scripscrap-web` on that venv’s PATH.
 
-## Environment
+## Run the web app
 
-The matchup form in the web UI POSTs to the add-matchup Cloud Run service. If that service requires a bearer token, export it before starting the UI:
+From the repository root, with the venv active:
+
+```bash
+source .venv/bin/activate
+python -m scripscrap.web
+```
+
+Then open [http://127.0.0.1:5000](http://127.0.0.1:5000) in a browser. Leave that terminal running; stop the server with Ctrl+C.
+
+`python -m scripscrap.web` is the reliable way to start the UI. After a successful `pip install -e .`, `scripscrap-web` does the same thing, but only if the venv is active — otherwise the shell reports `command not found`.
+
+Optional flags: `--host` (default `127.0.0.1`) and `--port` (default `5000`). Example: `python -m scripscrap.web --port 8000`.
+
+If the matchup form needs a bearer token for the add-matchup Cloud Run service, export it in the same terminal **before** starting the server:
 
 ```bash
 export ADD_MATCHUP_TOKEN="your-token"
+python -m scripscrap.web
 ```
 
-On Windows (cmd): `set ADD_MATCHUP_TOKEN=your-token`.
+On Windows (cmd): `set ADD_MATCHUP_TOKEN=your-token`. If the token is set, it is sent as `Authorization: Bearer …`. Scraping tables does not need this variable.
 
-The token is optional in code: if it is set, it is sent as `Authorization: Bearer …`. Scraping tables does not need this variable.
+From the home page you can:
 
-Latest scrape results for the web UI are stored in `data/scripscrap.db` (created automatically). That directory is gitignored.
+- Save a named public URL, scrape its HTML tables, and keep the latest snapshot in SQLite (`data/scripscrap.db`, created automatically and gitignored)
+- Open a source to view stored tables, refresh, export CSV/JSON, or delete it
+- Fill in a matchup (week, lock/freeze times, two players) and POST it to the add-matchup endpoint
 
-## Run locally
+The first scrape for a source can take a while while Chromium loads the page. Failed refreshes keep the previous snapshot and show the error.
 
-### CLI
+## CLI
 
 Scrape a public page and print tables to stdout. CSV is the default:
 
 ```bash
-scripscrap https://example.com/page-with-tables
-scripscrap https://example.com/page-with-tables > tables.csv
+source .venv/bin/activate
+python -m scripscrap https://example.com/page-with-tables
+python -m scripscrap https://example.com/page-with-tables > tables.csv
 ```
 
 JSON (object keyed by table index; `--table` prints that table as an array):
 
 ```bash
-scripscrap https://example.com/page-with-tables --format json
-scripscrap https://example.com/page-with-tables --format json --table 0
+python -m scripscrap https://example.com/page-with-tables --format json
+python -m scripscrap https://example.com/page-with-tables --format json --table 0
 ```
+
+`scripscrap` is the same as `python -m scripscrap` when the venv is active.
 
 | Flag | Description |
 | --- | --- |
@@ -63,22 +82,6 @@ scripscrap https://example.com/page-with-tables --format json --table 0
 | `--timeout SECONDS` | Wait this long for navigation and a `table` to appear (default: `30`) |
 
 When more than one table is printed as CSV, each table is preceded by a `# table N` comment line.
-
-### Web UI
-
-```bash
-scripscrap-web
-```
-
-Then open [http://127.0.0.1:5000](http://127.0.0.1:5000). Optional flags: `--host` and `--port`.
-
-From the home page you can:
-
-- Save a named public URL, scrape its HTML tables, and keep the latest snapshot in SQLite
-- Open a source to view stored tables, refresh, export CSV/JSON, or delete it
-- Fill in a matchup (week, lock/freeze times, two players) and POST it to the add-matchup endpoint
-
-The first scrape for a source can take a while while Chromium loads the page. Failed refreshes keep the previous snapshot and show the error.
 
 ## How scraping works
 
