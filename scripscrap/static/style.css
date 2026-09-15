@@ -33,6 +33,7 @@ main,
   align-items: baseline;
   gap: 1rem;
   padding-bottom: 0;
+  flex-wrap: wrap;
 }
 
 .logo {
@@ -40,6 +41,21 @@ main,
   letter-spacing: 0.02em;
   color: var(--ink);
   text-decoration: none;
+}
+
+.site-nav {
+  display: flex;
+  gap: 0.85rem;
+}
+
+.site-nav a {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.site-nav a:hover {
+  text-decoration: underline;
 }
 
 .tagline,
@@ -114,7 +130,8 @@ label {
 }
 
 input,
-textarea {
+textarea,
+select {
   font: inherit;
   font-weight: 400;
   padding: 0.45rem 0.6rem;
@@ -150,10 +167,10 @@ button.secondary,
   border: 1px solid var(--accent);
 }
 
-button.danger {
-  background: transparent;
-  color: var(--danger);
-  border: 1px solid var(--danger);
+.button[aria-disabled="true"] {
+  opacity: 0.45;
+  pointer-events: none;
+  cursor: not-allowed;
 }
 
 .toolbar {
@@ -208,7 +225,68 @@ table.data td {
 table.data th { font-size: 0.8rem; color: var(--muted); }
 table.sources td a { color: var(--ink); font-weight: 600; }
 
+body.weeks .site-header,
+body.weeks main,
+body.weeks .site-footer {
+  max-width: 1100px;
+}
+
+.week-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.week-bar h1 {
+  margin: 0;
+}
+
+.week-bar-controls {
+  display: flex;
+  align-items: end;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.week-bar-controls label {
+  margin: 0;
+}
+
+.week-bar-controls .button {
+  white-space: nowrap;
+}
+
+.duel-card-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.85rem;
+}
+
+.duel-card-header h2 {
+  margin: 0;
+  letter-spacing: 0.06em;
+}
+
+.duel-card-header p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.duel-card button[type="submit"] {
+  justify-self: start;
+  margin-top: 0.5rem;
+}
+
 @media (max-width: 640px) {
   .row,
   .players { grid-template-columns: 1fr; }
+
+  .week-bar-controls {
+    width: 100%;
+  }
 }

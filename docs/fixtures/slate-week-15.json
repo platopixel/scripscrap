@@ -1,0 +1,71 @@
+{
+  "week": 15,
+  "duels": [
+    {
+      "week": 15,
+      "id": "qb",
+      "lockedAtUtc": "2026-12-14T18:00:00Z",
+      "freezeAtUtc": "2026-12-17T17:00:00Z",
+      "playerA": {
+        "slug": "patrick-mahomes",
+        "name": "Patrick Mahomes",
+        "teamAbbr": "KC",
+        "opponent": "@ LAC",
+        "pos": "QB",
+        "proj": 24.1
+      },
+      "playerB": {
+        "slug": "justin-herbert",
+        "name": "Justin Herbert",
+        "teamAbbr": "LAC",
+        "opponent": "vs KC",
+        "pos": "QB",
+        "proj": 22.8
+      }
+    },
+    {
+      "week": 15,
+      "id": "rb",
+      "lockedAtUtc": "2026-12-14T18:00:00Z",
+      "freezeAtUtc": "2026-12-17T17:00:00Z",
+      "playerA": {
+        "slug": "jahmyr-gibbs",
+        "name": "Jahmyr Gibbs",
+        "teamAbbr": "DET",
+        "opponent": "vs LAR",
+        "pos": "RB",
+        "proj": 18.4
+      },
+      "playerB": {
+        "slug": "kyren-williams",
+        "name": "Kyren Williams",
+        "teamAbbr": "LAR",
+        "opponent": "@ DET",
+        "pos": "RB",
+        "proj": 16.9
+      }
+    },
+    {
+      "week": 15,
+      "id": "wr",
+      "lockedAtUtc": "2026-12-14T18:00:00Z",
+      "freezeAtUtc": "2026-12-17T17:00:00Z",
+      "playerA": {
+        "slug": "ja-marr-chase",
+        "name": "Ja'Marr Chase",
+        "teamAbbr": "CIN",
+        "opponent": "@ BAL",
+        "pos": "WR",
+        "proj": 17.2
+      },
+      "playerB": {
+        "slug": "zay-flowers",
+        "name": "Zay Flowers",
+        "teamAbbr": "BAL",
+        "opponent": "vs CIN",
+        "pos": "WR",
+        "proj": 14.6
+      }
+    }
+  ]
+}

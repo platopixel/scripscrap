@@ -6,9 +6,13 @@
   <title>{% block title %}scripscrap{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
+<body{% block body_attrs %}{% endblock %}>
   <header class="site-header">
     <a class="logo" href="{{ url_for('index') }}">scripscrap</a>
+    <nav class="site-nav" aria-label="Main">
+      <a href="{{ url_for('index') }}">Home</a>
+      <a href="{{ url_for('weeks_index') }}">Weeks</a>
+    </nav>
     <p class="tagline">Local table scraper</p>
   </header>
   <main>

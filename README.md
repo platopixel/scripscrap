@@ -1,6 +1,6 @@
 # scripscrap
 
-Extract HTML tables from public JavaScript-rendered pages, from the CLI or a local web UI. The web app can also POST a player matchup payload to a remote add-matchup endpoint.
+Extract HTML tables from public JavaScript-rendered pages, from the CLI or a local web UI. The web app can also POST a new matchup to a remote add-matchup endpoint, and browse or edit weekly duels on the Weeks page.
 
 Use this only on **public pages** you are allowed to access. Do not collect personal information (PII). This tool does not log in, solve CAPTCHAs, or bypass access controls.
 
@@ -39,20 +39,31 @@ Then open [http://127.0.0.1:5000](http://127.0.0.1:5000) in a browser. Leave tha
 
 Optional flags: `--host` (default `127.0.0.1`) and `--port` (default `5000`). Example: `python -m scripscrap.web --port 8000`.
 
-If the matchup form needs a bearer token for the add-matchup Cloud Run service, export it in the same terminal **before** starting the server:
+Optional env vars (export them in the same terminal **before** starting the server). None of these are required for scraping tables.
 
 ```bash
 export ADD_MATCHUP_TOKEN="your-token"
+export SLATE_API_URL="https://slate-api.example"
+export SLATE_API_TOKEN="your-slate-token"
 python -m scripscrap.web
 ```
 
-On Windows (cmd): `set ADD_MATCHUP_TOKEN=your-token`. If the token is set, it is sent as `Authorization: Bearer …`. Scraping tables does not need this variable.
+On Windows (cmd): `set ADD_MATCHUP_TOKEN=your-token`, `set SLATE_API_URL=https://slate-api.example`, and `set SLATE_API_TOKEN=your-slate-token`.
+
+- `ADD_MATCHUP_TOKEN` — optional Bearer token for the home-page **Post matchup** form (add-matchup Cloud Run). If set, it is sent as `Authorization: Bearer …`.
+- `SLATE_API_URL` — required for the **Weeks** page (`/weeks`). Base URL with no trailing slash.
+- `SLATE_API_TOKEN` — optional Bearer token for the Weeks slate API. If set, it is sent as `Authorization: Bearer …`.
+
+If `SLATE_API_URL` is unset, `/weeks` still loads and shows how to configure it. That empty state is supported.
+
+The slate API contract and sample payloads are in [`docs/weekly-duel-editor.md`](docs/weekly-duel-editor.md) and [`docs/fixtures/`](docs/fixtures/).
 
 From the home page you can:
 
 - Save a named public URL, scrape its HTML tables, and keep the latest snapshot in SQLite (`data/scripscrap.db`, created automatically and gitignored)
 - Open a source to view stored tables, refresh, export CSV/JSON, or delete it
-- Fill in a matchup (week, lock/freeze times, two players) and POST it to the add-matchup endpoint
+- Fill in a matchup (week, lock/freeze times, two players) and POST it to the add-matchup endpoint (create a duel)
+- Open **Weeks** in the header (`/weeks`) to browse and edit duels for a slate week. That is separate from **Post matchup** on the home page.
 
 The first scrape for a source can take a while while Chromium loads the page. Failed refreshes keep the previous snapshot and show the error.
 

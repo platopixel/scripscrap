@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 from io import StringIO
 from pathlib import Path
 from urllib.parse import urlparse
@@ -29,6 +30,7 @@ from scripscrap.matchup import (
 )
 from scripscrap.output import write_csv, write_json
 from scripscrap.scraper import ScrapeError, Table, scrape_tables, select_tables
+from scripscrap.slate import URL_ENV_VAR, SlateError, get_week, list_weeks, put_duel
 from scripscrap.store import Store
 
 MATCHUP_FORM_SESSION_KEY = "matchup_form"
@@ -152,16 +154,115 @@ def create_app(store: Store | None = None) -> Flask:
         except MatchupError as exc:
             flash(str(exc), "error")
             return redirect(request.referrer or url_for("index"))
-        preview = result.text.strip() or "(empty body)"
-        if len(preview) > 240:
-            preview = preview[:237] + "..."
+        preview = _body_preview(result.text)
         if result.ok:
             flash(f"Matchup posted ({result.status_code}): {preview}", "ok")
         else:
             flash(f"Matchup rejected ({result.status_code}): {preview}", "error")
         return redirect(request.referrer or url_for("index"))
 
+    @app.get("/weeks")
+    def weeks_index():
+        if not _slate_configured():
+            return _render_weeks(configured=False)
+        try:
+            weeks = list_weeks()
+        except SlateError as exc:
+            flash(str(exc), "error")
+            return _render_weeks(configured=True)
+        if weeks:
+            return redirect(url_for("show_week", week=max(weeks)))
+        return _render_weeks(configured=True)
+
+    @app.get("/weeks/<int:week>")
+    def show_week(week: int):
+        if week < 1:
+            flash("Week must be a positive integer.", "error")
+            return redirect(url_for("weeks_index"))
+        if not _slate_configured():
+            return _render_weeks(week=week, configured=False)
+        weeks: list[int] = []
+        duels: list = []
+        try:
+            weeks = list_weeks()
+        except SlateError as exc:
+            flash(str(exc), "error")
+        try:
+            duels = [matchup_form_values(item) for item in get_week(week)]
+        except SlateError as exc:
+            flash(str(exc), "error")
+        return _render_weeks(
+            week=week,
+            weeks=weeks,
+            duels=duels,
+            configured=True,
+        )
+
+    @app.post("/weeks/<int:week>/duels/<duel_id>")
+    def save_duel(week: int, duel_id: str):
+        raw = matchup_from_form(request.form)
+        form_week = str(raw.get("week") or "").strip()
+        form_id = str(raw.get("id") or "").strip()
+        if form_week != str(week) or form_id != duel_id:
+            flash("Duel week and id must match the URL.", "error")
+            return redirect(url_for("show_week", week=week))
+        try:
+            payload = parse_matchup_payload(raw)
+        except MatchupValidationError as exc:
+            flash(str(exc), "error")
+            return redirect(url_for("show_week", week=week))
+        try:
+            result = put_duel(payload)
+        except SlateError as exc:
+            flash(str(exc), "error")
+            return redirect(url_for("show_week", week=week))
+        if result.ok:
+            flash(f"Saved {payload['id']} for week {payload['week']}.", "ok")
+        else:
+            preview = _body_preview(result.text)
+            flash(f"Save rejected ({result.status_code}): {preview}", "error")
+        return redirect(url_for("show_week", week=week))
+
     return app
+
+
+def _slate_configured() -> bool:
+    return bool(os.environ.get(URL_ENV_VAR, "").strip())
+
+
+def _body_preview(text: str) -> str:
+    preview = text.strip() or "(empty body)"
+    if len(preview) > 240:
+        preview = preview[:237] + "..."
+    return preview
+
+
+def _render_weeks(
+    *,
+    week: int | None = None,
+    weeks: list[int] | None = None,
+    duels: list | None = None,
+    configured: bool = True,
+):
+    ordered = sorted(weeks or [])
+    select_weeks = list(ordered)
+    prev_week = next_week = None
+    if week is not None:
+        if week not in select_weeks:
+            select_weeks.append(week)
+            select_weeks.sort()
+        prev_week = next((item for item in reversed(ordered) if item < week), None)
+        next_week = next((item for item in ordered if item > week), None)
+    return render_template(
+        "weeks.html",
+        week=week,
+        weeks=ordered,
+        select_weeks=select_weeks,
+        prev_week=prev_week,
+        next_week=next_week,
+        duels=duels or [],
+        configured=configured,
+    )
 
 
 def _form_source(form) -> dict | None:

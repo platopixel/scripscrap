@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}{% if week %}Week {{ week }} · Weeks{% else %}Weeks{% endif %}{% endblock %}
+{% block body_attrs %} class="weeks"{% endblock %}
+{% block content %}
+  <section class="panel weeks-page">
+    {% if week %}
+      <div class="week-bar">
+        <h1>Week {{ week }}</h1>
+        <div class="week-bar-controls">
+          {% if prev_week %}
+            <a class="button secondary" href="{{ url_for('show_week', week=prev_week) }}">Previous</a>
+          {% else %}
+            <span class="button secondary" aria-disabled="true">Previous</span>
+          {% endif %}
+          <label>
+            Week
+            <select name="week" id="week-switcher" aria-label="Week" data-weeks-url="{{ url_for('weeks_index') }}">
+              {% for option in select_weeks %}
+                <option value="{{ option }}"{% if option == week %} selected{% endif %}>{{ option }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          {% if next_week %}
+            <a class="button secondary" href="{{ url_for('show_week', week=next_week) }}">Next</a>
+          {% else %}
+            <span class="button secondary" aria-disabled="true">Next</span>
+          {% endif %}
+        </div>
+      </div>
+    {% else %}
+      <h1>Weeks</h1>
+      <p class="lede">Browse duels for a chosen slate week.</p>
+    {% endif %}
+    {% if not configured %}
+      <p class="muted">Set <code>SLATE_API_URL</code> (and optional <code>SLATE_API_TOKEN</code>) and restart the server to browse weekly slates.</p>
+    {% elif not duels %}
+      <p class="muted">{% if week %}No duels for week {{ week }}.{% else %}No slates yet.{% endif %}</p>
+    {% endif %}
+  </section>
+
+  {% for duel in duels %}
+    <form class="panel duel-card stack" method="post" action="{{ url_for('save_duel', week=week, duel_id=duel.id) }}" autocomplete="off">
+      <header class="duel-card-header">
+        <h2>{{ duel.id | upper }}</h2>
+        <p>{{ duel.playerA.name }} vs {{ duel.playerB.name }}</p>
+      </header>
+      <input type="hidden" name="week" value="{{ duel.week }}">
+      <input type="hidden" name="id" value="{{ duel.id }}">
+      <div class="row">
+        <label>
+          Locked at (UTC)
+          <input type="datetime-local" name="lockedAtUtc" required step="1" value="{{ duel.lockedAtUtc }}">
+        </label>
+        <label>
+          Freeze at (UTC)
+          <input type="datetime-local" name="freezeAtUtc" required step="1" value="{{ duel.freezeAtUtc }}">
+        </label>
+      </div>
+      <div class="players">
+        {% for prefix, player, label in [
+          ("playerA", duel.playerA, "Player A"),
+          ("playerB", duel.playerB, "Player B"),
+        ] %}
+          <fieldset class="player">
+            <legend>{{ label }}</legend>
+            <label>
+              Slug
+              <input type="text" name="{{ prefix }}_slug" required value="{{ player.slug }}" placeholder="patrick-mahomes">
+            </label>
+            <label>
+              Name
+              <input type="text" name="{{ prefix }}_name" required value="{{ player.name }}">
+            </label>
+            <div class="row">
+              <label>
+                Team
+                <input type="text" name="{{ prefix }}_teamAbbr" required maxlength="8" value="{{ player.teamAbbr }}" placeholder="KC">
+              </label>
+              <label>
+                Position
+                <input type="text" name="{{ prefix }}_pos" required maxlength="8" value="{{ player.pos }}" placeholder="QB">
+              </label>
+            </div>
+            <label>
+              Opponent
+              <input type="text" name="{{ prefix }}_opponent" required value="{{ player.opponent }}" placeholder="@ LAC">
+            </label>
+            <label>
+              Projection
+              <input type="number" name="{{ prefix }}_proj" required step="any" value="{{ player.proj }}">
+            </label>
+          </fieldset>
+        {% endfor %}
+      </div>
+      <button type="submit">Save duel</button>
+    </form>
+  {% endfor %}
+  {% if week %}
+    <script>
+      (function () {
+        const select = document.getElementById("week-switcher");
+        if (!select) return;
+        select.addEventListener("change", function () {
+          const root = (select.getAttribute("data-weeks-url") || "/weeks").replace(/\/$/, "");
+          window.location = root + "/" + select.value;
+        });
+      })();
+    </script>
+  {% endif %}
+{% endblock %}

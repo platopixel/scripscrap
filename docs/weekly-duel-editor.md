@@ -1,14 +1,20 @@
 # Weekly matchup viewer and editor
 
+Flask setup (`/weeks`, `SLATE_API_URL`, `SLATE_API_TOKEN`) is in the [README](../README.md) under “Run the web app”.
+
 Add a dedicated Weeks page to the Flask app that lists duels for a chosen slate week via a new HTTPS API (implemented in another repo against `slates/{week}/duels/{duelId}`), lets you edit each duel in the existing matchup field shape, and PUTs changes back.
+
+Build order: [weekly-duel-editor-phases.md](weekly-duel-editor-phases.md).
 
 ## Implementation checklist
 
-- [ ] Keep the GET/PUT slates contract documented in README so the other repo can implement against it
-- [ ] Add `scripscrap/slate.py` HTTP client (list weeks, get week, put duel) using `SLATE_API_URL` + bearer token
-- [ ] Add `/weeks`, `/weeks/<week>`, and POST save-duel routes in `web.py`
-- [ ] Add `weeks.html` + header nav + CSS for week bar and per-duel edit cards
-- [ ] Document `SLATE_API_URL` / `SLATE_API_TOKEN` and the new Weeks section in `README.md`
+- [x] Phase 0 — Freeze the API contract and fixtures
+- [x] Phase 1 — `scripscrap/slate.py` HTTP client
+- [x] Phase 2 — Navigation and empty Weeks shell
+- [x] Phase 3 — Read-only week view
+- [x] Phase 4 — Week switcher
+- [x] Phase 5 — Edit fields and PUT back
+- [x] Phase 6 — README, env notes, and final polish
 
 ## Context
 
